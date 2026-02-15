@@ -1,20 +1,54 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import HomeScreen from "./screens/HomeScreen";
+import TopicSelectionScreen from "./screens/TopicSelectionScreen";
+import FlashcardsScreen from "./screens/FlashcardsScreen";
+import PracticeScreen from "./screens/PracticeScreen";
+import QuizScreen from "./screens/QuizScreen";
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+    return (
+        <NavigationContainer>
+            <Stack.Navigator
+                initialRouteName="Home"
+                screenOptions={{
+                    headerStyle: {
+                        backgroundColor: "#2196F3",
+                    },
+                    headerTintColor: "#fff",
+                    headerTitleStyle: {
+                        fontWeight: "bold",
+                    },
+                }}
+            >
+                <Stack.Screen
+                    name="Home"
+                    component={HomeScreen}
+                    options={{ title: "Главная" }}
+                />
+                <Stack.Screen
+                    name="TopicSelection"
+                    component={TopicSelectionScreen}
+                    options={{ title: "Выбор темы" }}
+                />
+                <Stack.Screen
+                    name="Flashcards"
+                    component={FlashcardsScreen}
+                    options={{ title: "Карточки" }}
+                />
+                <Stack.Screen
+                    name="Practice"
+                    component={PracticeScreen}
+                    options={{ title: "Практика" }}
+                />
+                <Stack.Screen
+                    name="Quiz"
+                    component={QuizScreen}
+                    options={{ title: "Тест" }}
+                />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
