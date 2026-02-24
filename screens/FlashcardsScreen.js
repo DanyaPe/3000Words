@@ -11,11 +11,11 @@ import {
 } from "../utils/progressManager";
 
 export default function FlashcardsScreen({ navigation, route }) {
-    const [allTopicWords, setAllTopicWords] = useState([]); // Все слова темы
-    const [words, setWords] = useState([]); // Непросмотренные слова
+    const [words, setWords] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [viewedCount, setViewedCount] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
+    const [direction, setDirection] = useState("en-ru"); // Добавили состояние направления
     const { topic } = route.params || {};
 
     useEffect(() => {
@@ -24,23 +24,19 @@ export default function FlashcardsScreen({ navigation, route }) {
 
     const loadWords = async () => {
         const topicWords = getWordsByTopic(topic);
-        setAllTopicWords(topicWords);
         setTotalCount(topicWords.length);
 
-        // Получаем список просмотренных слов
         const viewedWordIds = await getViewedWordsForTopicAndMode(
             topic,
             "flashcards",
         );
         setViewedCount(viewedWordIds.length);
 
-        // Фильтруем непросмотренные слова
         const unviewedWords = topicWords.filter((word) => {
             const wordId = getWordId(word);
             return !viewedWordIds.includes(wordId);
         });
 
-        // Перемешиваем непросмотренные
         const shuffled = [...unviewedWords].sort(() => 0.5 - Math.random());
         setWords(shuffled);
         setCurrentIndex(0);
@@ -74,7 +70,6 @@ export default function FlashcardsScreen({ navigation, route }) {
         if (currentIndex < words.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
-            // Все карточки просмотрены
             showCompletionDialog();
         }
     };
@@ -113,6 +108,11 @@ export default function FlashcardsScreen({ navigation, route }) {
                 },
             ],
         );
+    };
+
+    // Новая функция переключения направления
+    const toggleDirection = () => {
+        setDirection((prev) => (prev === "en-ru" ? "ru-en" : "en-ru"));
     };
 
     if (words.length === 0) {
@@ -161,18 +161,31 @@ export default function FlashcardsScreen({ navigation, route }) {
                     </Text>
                 </View>
                 {topic && <Text style={styles.topicLabel}>Тема: {topic}</Text>}
-                <TouchableOpacity
-                    style={styles.resetSmallButton}
-                    onPress={handleResetProgress}
-                >
-                    <Text style={styles.resetSmallButtonText}>🔄 Сброс</Text>
-                </TouchableOpacity>
+                <View style={styles.controlsRow}>
+                    <TouchableOpacity
+                        style={styles.directionButton}
+                        onPress={toggleDirection}
+                    >
+                        <Text style={styles.directionText}>
+                            {direction === "en-ru" ? "🇬🇧 → 🇷🇺" : "🇷🇺 → 🇬🇧"}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.resetSmallButton}
+                        onPress={handleResetProgress}
+                    >
+                        <Text style={styles.resetSmallButtonText}>
+                            🔄 Сброс
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <View style={styles.cardContainer}>
                 <SwipeableCard
-                    key={currentIndex}
+                    key={`${currentIndex}-${direction}`}
                     word={words[currentIndex]}
+                    direction={direction}
                     onSwipeLeft={handleSwipeLeft}
                     onSwipeRight={handleSwipeRight}
                 />
@@ -226,6 +239,21 @@ const styles = StyleSheet.create({
         color: "#2196F3",
         fontWeight: "500",
         marginBottom: 8,
+    },
+    controlsRow: {
+        flexDirection: "row",
+        gap: 10,
+        alignItems: "center",
+    },
+    directionButton: {
+        backgroundColor: "#e0e0e0",
+        paddingHorizontal: 15,
+        paddingVertical: 8,
+        borderRadius: 15,
+    },
+    directionText: {
+        fontSize: 16,
+        fontWeight: "600",
     },
     resetSmallButton: {
         backgroundColor: "#FF9800",

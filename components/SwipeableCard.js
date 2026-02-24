@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react"; // Добавьте useEffect
 import {
     Animated,
     PanResponder,
@@ -10,31 +10,38 @@ import {
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SWIPE_DISTANCE_THRESHOLD = 10; // Минимальное движение для свайпа
+const SWIPE_DISTANCE_THRESHOLD = 10;
 
-export default function SwipeableCard({ word, onSwipeLeft, onSwipeRight }) {
+export default function SwipeableCard({
+    word,
+    direction = "en-ru",
+    onSwipeLeft,
+    onSwipeRight,
+}) {
     const position = useRef(new Animated.ValueXY()).current;
     const [isFlipped, setIsFlipped] = useState(false);
+
+    // Сбрасываем переворот при изменении направления
+    useEffect(() => {
+        setIsFlipped(false);
+    }, [direction]);
 
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onPanResponderMove: (event, gesture) => {
-                // Двигаем карточку только по горизонтали
                 position.setValue({ x: gesture.dx, y: 0 });
             },
             onPanResponderRelease: (event, gesture) => {
                 const { dx, dy } = gesture;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                // Если движение было маленьким - это тап для переворота
                 if (distance < SWIPE_DISTANCE_THRESHOLD) {
-                    setIsFlipped((prev) => !prev); // ← Изменили здесь
+                    setIsFlipped((prev) => !prev);
                     resetPosition();
                     return;
                 }
 
-                // Иначе это свайп
                 if (gesture.dx > SWIPE_THRESHOLD) {
                     forceSwipe("right");
                 } else if (gesture.dx < -SWIPE_THRESHOLD) {
@@ -46,21 +53,20 @@ export default function SwipeableCard({ word, onSwipeLeft, onSwipeRight }) {
         }),
     ).current;
 
-    const forceSwipe = (direction) => {
-        const x =
-            direction === "right" ? SCREEN_WIDTH + 100 : -SCREEN_WIDTH - 100;
+    const forceSwipe = (dir) => {
+        const x = dir === "right" ? SCREEN_WIDTH + 100 : -SCREEN_WIDTH - 100;
         Animated.timing(position, {
             toValue: { x, y: 0 },
             duration: 250,
             useNativeDriver: false,
         }).start(() => {
-            onSwipeComplete(direction);
+            onSwipeComplete(dir);
         });
     };
 
-    const onSwipeComplete = (direction) => {
-        setIsFlipped(false); // Сбрасываем переворот для новой карточки
-        if (direction === "right") {
+    const onSwipeComplete = (dir) => {
+        setIsFlipped(false);
+        if (dir === "right") {
             onSwipeRight();
         } else {
             onSwipeLeft();
@@ -87,6 +93,12 @@ export default function SwipeableCard({ word, onSwipeLeft, onSwipeRight }) {
         };
     };
 
+    // Определяем что показывать на лицевой и обратной стороне
+    const frontText = direction === "en-ru" ? word.english : word.russian;
+    const frontTranscription =
+        direction === "en-ru" ? word.transcription : null;
+    const backText = direction === "en-ru" ? word.russian : word.english;
+
     return (
         <Animated.View
             style={[styles.cardWrapper, getCardStyle()]}
@@ -95,20 +107,26 @@ export default function SwipeableCard({ word, onSwipeLeft, onSwipeRight }) {
             <View style={styles.card}>
                 <View style={styles.cardContent}>
                     {!isFlipped ? (
-                        // Лицевая сторона - английское слово
                         <>
-                            <Text style={styles.mainText}>{word.english}</Text>
-                            <Text style={styles.transcription}>
-                                {word.transcription}
-                            </Text>
+                            <Text style={styles.mainText}>{frontText}</Text>
+                            {frontTranscription && (
+                                <Text style={styles.transcription}>
+                                    {frontTranscription}
+                                </Text>
+                            )}
                             <Text style={styles.hint}>
                                 Нажмите для перевода
                             </Text>
                         </>
                     ) : (
-                        // Обратная сторона - русский перевод
                         <>
-                            <Text style={styles.mainText}>{word.russian}</Text>
+                            <Text style={styles.mainText}>{backText}</Text>
+                            {/* Показываем транскрипцию на обратной стороне если направление RU→EN */}
+                            {direction === "ru-en" && (
+                                <Text style={styles.transcription}>
+                                    {word.transcription}
+                                </Text>
+                            )}
                             <Text style={styles.partOfSpeech}>
                                 {word.partOfSpeech}
                             </Text>
