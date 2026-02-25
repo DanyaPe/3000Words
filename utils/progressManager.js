@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PROGRESS_KEY = "@word_progress";
 const VIEWED_WORDS_KEY = "@viewed_words"; // Новый ключ для просмотренных слов
+const SESSION_STATS_KEY = "@session_stats";
 
 // Получить весь прогресс
 export const getProgress = async () => {
@@ -215,4 +216,43 @@ export const getTopicsStatusForMode = async (mode) => {
     }
 
     return topicsStatus;
+};
+
+// Получить статистику сессии для темы и режима
+export const getSessionStats = async (topic, mode) => {
+    try {
+        const allStats = await AsyncStorage.getItem(SESSION_STATS_KEY);
+        const stats = allStats ? JSON.parse(allStats) : {};
+        const key = `${mode.toLowerCase()}_${topic || "all"}`;
+        return stats[key] || { correct: 0, incorrect: 0 };
+    } catch (error) {
+        console.error("Ошибка загрузки статистики сессии:", error);
+        return { correct: 0, incorrect: 0 };
+    }
+};
+
+// Сохранить статистику сессии
+export const saveSessionStats = async (topic, mode, correct, incorrect) => {
+    try {
+        const allStats = await AsyncStorage.getItem(SESSION_STATS_KEY);
+        const stats = allStats ? JSON.parse(allStats) : {};
+        const key = `${mode.toLowerCase()}_${topic || "all"}`;
+        stats[key] = { correct, incorrect };
+        await AsyncStorage.setItem(SESSION_STATS_KEY, JSON.stringify(stats));
+    } catch (error) {
+        console.error("Ошибка сохранения статистики сессии:", error);
+    }
+};
+
+// Сбросить статистику сессии для темы и режима
+export const resetSessionStats = async (topic, mode) => {
+    try {
+        const allStats = await AsyncStorage.getItem(SESSION_STATS_KEY);
+        const stats = allStats ? JSON.parse(allStats) : {};
+        const key = `${mode.toLowerCase()}_${topic || "all"}`;
+        delete stats[key];
+        await AsyncStorage.setItem(SESSION_STATS_KEY, JSON.stringify(stats));
+    } catch (error) {
+        console.error("Ошибка сброса статистики сессии:", error);
+    }
 };

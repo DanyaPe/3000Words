@@ -15,6 +15,9 @@ import {
     markWordAsViewed,
     getViewedWordsForTopicAndMode,
     resetProgressForTopicAndMode,
+    getSessionStats,
+    saveSessionStats,
+    resetSessionStats,
 } from "../utils/progressManager";
 
 export default function PracticeScreen({ navigation, route }) {
@@ -36,27 +39,26 @@ export default function PracticeScreen({ navigation, route }) {
 
     const loadWords = async () => {
         const topicWords = getWordsByTopic(topic);
-        setAllTopicWords(topicWords);
         setTotalCount(topicWords.length);
 
-        // Получаем список просмотренных слов
         const viewedWordIds = await getViewedWordsForTopicAndMode(
             topic,
             "practice",
         );
         setViewedCount(viewedWordIds.length);
 
-        // Фильтруем непросмотренные слова
+        // Загружаем сохранённую статистику сессии
+        const savedStats = await getSessionStats(topic, "practice");
+        setStats(savedStats);
+
         const unviewedWords = topicWords.filter((word) => {
             const wordId = getWordId(word);
             return !viewedWordIds.includes(wordId);
         });
 
-        // Перемешиваем непросмотренные
         const shuffled = [...unviewedWords].sort(() => 0.5 - Math.random());
         setWords(shuffled);
         setCurrentIndex(0);
-        setStats({ correct: 0, incorrect: 0 });
     };
 
     const checkAnswer = async () => {
@@ -77,16 +79,23 @@ export default function PracticeScreen({ navigation, route }) {
         setIsCorrect(correct);
         setShowResult(true);
 
-        // Сохраняем результат
         const wordId = getWordId(currentWord);
         await recordAttempt(wordId, correct);
         await markWordAsViewed(wordId, topic, "practice");
 
-        // Обновляем статистику
-        setStats((prev) => ({
-            correct: prev.correct + (correct ? 1 : 0),
-            incorrect: prev.incorrect + (correct ? 0 : 1),
-        }));
+        const newStats = {
+            correct: stats.correct + (correct ? 1 : 0),
+            incorrect: stats.incorrect + (correct ? 0 : 1),
+        };
+        setStats(newStats);
+
+        // Сохраняем статистику в AsyncStorage
+        await saveSessionStats(
+            topic,
+            "practice",
+            newStats.correct,
+            newStats.incorrect,
+        );
 
         setViewedCount((prev) => prev + 1);
     };
@@ -128,7 +137,7 @@ export default function PracticeScreen({ navigation, route }) {
     const handleResetProgress = async () => {
         Alert.alert(
             "Сброс прогресса",
-            `Вы уверены, что хотите сбросить прогресс для темы "${topic || "Все темы"}"? Все пройденные слова станут доступны снова.`,
+            `Вы уверены, что хотите сбросить прогресс для темы "${topic || "Все темы"}"? Все пройденные слова и статистика станут доступны снова.`,
             [
                 { text: "Отмена", style: "cancel" },
                 {
@@ -136,6 +145,7 @@ export default function PracticeScreen({ navigation, route }) {
                     style: "destructive",
                     onPress: async () => {
                         await resetProgressForTopicAndMode(topic, "practice");
+                        await resetSessionStats(topic, "practice");
                         await loadWords();
                     },
                 },
