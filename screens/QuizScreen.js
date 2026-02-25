@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { getWordsByTopic, getWordId } from "../utils/wordsManager";
-import { recordAttempt } from "../utils/progressManager";
+import {
+    recordAttempt,
+    markWordAsViewed,
+    getViewedWordsForTopicAndMode,
+    resetProgressForTopicAndMode,
+    getSessionStats,
+    saveSessionStats,
+    resetSessionStats,
+} from "../utils/progressManager";
 
 export default function QuizScreen({ navigation, route }) {
     const [words, setWords] = useState([]);
@@ -11,6 +19,8 @@ export default function QuizScreen({ navigation, route }) {
     const [showResult, setShowResult] = useState(false);
     const [direction, setDirection] = useState("en-ru");
     const [stats, setStats] = useState({ correct: 0, incorrect: 0 });
+    const [viewedCount, setViewedCount] = useState(0);
+    const [totalCount, setTotalCount] = useState(0);
     const { topic } = route.params || {};
 
     useEffect(() => {
@@ -23,12 +33,31 @@ export default function QuizScreen({ navigation, route }) {
         }
     }, [currentIndex, words, direction]);
 
-    const loadWords = () => {
+    const loadWords = async () => {
         const topicWords = getWordsByTopic(topic);
-        const shuffled = [...topicWords].sort(() => 0.5 - Math.random());
-        setWords(shuffled.slice(0, 30));
+        setTotalCount(topicWords.length);
+
+        // Получаем список просмотренных слов
+        const viewedWordIds = await getViewedWordsForTopicAndMode(
+            topic,
+            "quiz",
+        );
+        setViewedCount(viewedWordIds.length);
+
+        // Загружаем сохранённую статистику сессии
+        const savedStats = await getSessionStats(topic, "quiz");
+        setStats(savedStats);
+
+        // Фильтруем непросмотренные слова
+        const unviewedWords = topicWords.filter((word) => {
+            const wordId = getWordId(word);
+            return !viewedWordIds.includes(wordId);
+        });
+
+        // Перемешиваем непросмотренные
+        const shuffled = [...unviewedWords].sort(() => 0.5 - Math.random());
+        setWords(shuffled);
         setCurrentIndex(0);
-        setStats({ correct: 0, incorrect: 0 });
     };
 
     const generateOptions = () => {
@@ -38,8 +67,7 @@ export default function QuizScreen({ navigation, route }) {
         const correctAnswer =
             direction === "en-ru" ? currentWord.russian : currentWord.english;
 
-        // ВАЖНО: берём неправильные варианты только из текущей темы
-        const topicWords = getWordsByTopic(topic); // Используем слова только из текущей темы
+        const topicWords = getWordsByTopic(topic);
 
         const wrongOptions = topicWords
             .filter((w) => {
@@ -50,7 +78,6 @@ export default function QuizScreen({ navigation, route }) {
             .slice(0, 3)
             .map((w) => (direction === "en-ru" ? w.russian : w.english));
 
-        // Собираем все варианты и перемешиваем
         const allOptions = [correctAnswer, ...wrongOptions].sort(
             () => 0.5 - Math.random(),
         );
@@ -73,40 +100,113 @@ export default function QuizScreen({ navigation, route }) {
         // Сохраняем результат
         const wordId = getWordId(currentWord);
         await recordAttempt(wordId, isCorrect);
+        await markWordAsViewed(wordId, topic, "quiz");
 
         // Обновляем статистику
-        setStats((prev) => ({
-            correct: prev.correct + (isCorrect ? 1 : 0),
-            incorrect: prev.incorrect + (isCorrect ? 0 : 1),
-        }));
+        const newStats = {
+            correct: stats.correct + (isCorrect ? 1 : 0),
+            incorrect: stats.incorrect + (isCorrect ? 0 : 1),
+        };
+        setStats(newStats);
+
+        // Сохраняем статистику в AsyncStorage
+        await saveSessionStats(
+            topic,
+            "quiz",
+            newStats.correct,
+            newStats.incorrect,
+        );
+
+        setViewedCount((prev) => prev + 1);
     };
 
     const nextQuestion = () => {
         if (currentIndex < words.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
-            // Сессия завершена
-            const total = stats.correct + stats.incorrect;
-            const percentage = Math.round((stats.correct / total) * 100);
-            Alert.alert(
-                "Тест завершён!",
-                `Результаты:\n\nПравильно: ${stats.correct}\nОшибок: ${stats.incorrect}\nТочность: ${percentage}%`,
-                [
-                    { text: "На главную", onPress: () => navigation.goBack() },
-                    { text: "Ещё раз", onPress: loadWords },
-                ],
-            );
+            showCompletionDialog();
         }
+    };
+
+    const showCompletionDialog = () => {
+        const total = stats.correct + stats.incorrect;
+        const percentage =
+            total > 0 ? Math.round((stats.correct / total) * 100) : 0;
+
+        Alert.alert(
+            "🎉 Тест завершён!",
+            `Все слова пройдены!\n\nТема: ${topic || "Все темы"}\nПравильно: ${stats.correct}\nОшибок: ${stats.incorrect}\nТочность: ${percentage}%`,
+            [
+                {
+                    text: "На главную",
+                    onPress: () => navigation.navigate("Home"),
+                },
+                {
+                    text: "Сбросить прогресс",
+                    onPress: () => handleResetProgress(),
+                    style: "destructive",
+                },
+            ],
+        );
+    };
+
+    const handleResetProgress = async () => {
+        Alert.alert(
+            "Сброс прогресса",
+            `Вы уверены, что хотите сбросить прогресс для темы "${topic || "Все темы"}"? Все пройденные вопросы и статистика станут доступны снова.`,
+            [
+                { text: "Отмена", style: "cancel" },
+                {
+                    text: "Сбросить",
+                    style: "destructive",
+                    onPress: async () => {
+                        await resetProgressForTopicAndMode(topic, "quiz");
+                        await resetSessionStats(topic, "quiz");
+                        await loadWords();
+                    },
+                },
+            ],
+        );
     };
 
     const toggleDirection = () => {
         setDirection((prev) => (prev === "en-ru" ? "ru-en" : "en-ru"));
     };
 
-    if (words.length === 0 || options.length === 0) {
+    if (words.length === 0) {
         return (
             <View style={styles.container}>
-                <Text>Загрузка...</Text>
+                <View style={styles.completionContainer}>
+                    <Text style={styles.completionEmoji}>🎉</Text>
+                    <Text style={styles.completionTitle}>
+                        Все вопросы пройдены!
+                    </Text>
+                    <Text style={styles.completionText}>
+                        Тема: {topic || "Все темы"}
+                        {"\n"}
+                        Всего слов: {totalCount}
+                        {"\n"}
+                        Правильно: {stats.correct}
+                        {"\n"}
+                        Ошибок: {stats.incorrect}
+                    </Text>
+
+                    <TouchableOpacity
+                        style={styles.resetButton}
+                        onPress={handleResetProgress}
+                    >
+                        <Text style={styles.resetButtonText}>
+                            🔄 Сбросить прогресс
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.homeButton}
+                        onPress={() => navigation.navigate("Home")}
+                    >
+                        <Text style={styles.homeButtonText}>На главную</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         );
     }
@@ -120,10 +220,14 @@ export default function QuizScreen({ navigation, route }) {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.counter}>
-                    {currentIndex + 1} / {words.length}
-                </Text>
-                {topic && <Text style={styles.topicLabel}>Тема: {topic}</Text>}
+                <View style={styles.progressInfo}>
+                    <Text style={styles.counter}>
+                        {viewedCount} / {totalCount} пройдено
+                    </Text>
+                    <Text style={styles.remaining}>
+                        Осталось: {words.length - currentIndex}
+                    </Text>
+                </View>
                 <TouchableOpacity
                     style={styles.directionButton}
                     onPress={toggleDirection}
@@ -133,9 +237,17 @@ export default function QuizScreen({ navigation, route }) {
                         {direction === "en-ru" ? "🇬🇧 → 🇷🇺" : "🇷🇺 → 🇬🇧"}
                     </Text>
                 </TouchableOpacity>
-                <Text style={styles.statsText}>
-                    ✓ {stats.correct} ✗ {stats.incorrect}
-                </Text>
+                <View style={styles.statsRow}>
+                    <Text style={styles.statsText}>
+                        ✓ {stats.correct} ✗ {stats.incorrect}
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.resetSmallButton}
+                        onPress={handleResetProgress}
+                    >
+                        <Text style={styles.resetSmallButtonText}>🔄</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <View style={styles.questionContainer}>
@@ -206,33 +318,52 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: 20,
+        padding: 15,
         backgroundColor: "white",
     },
-    counter: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#666",
+    progressInfo: {
+        alignItems: "flex-start",
+        flex: 1,
     },
-    topicLabel: {
+    counter: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#333",
+    },
+    remaining: {
         fontSize: 12,
-        color: "#2196F3",
-        fontWeight: "500",
+        color: "#666",
+        marginTop: 2,
     },
     directionButton: {
         backgroundColor: "#e0e0e0",
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 15,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
     },
     directionText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: "600",
     },
+    statsRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
     statsText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: "600",
         color: "#666",
+    },
+    resetSmallButton: {
+        backgroundColor: "#FF9800",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 10,
+    },
+    resetSmallButtonText: {
+        color: "white",
+        fontSize: 14,
     },
     questionContainer: {
         alignItems: "center",
@@ -307,6 +438,53 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "white",
         fontSize: 20,
+        fontWeight: "bold",
+    },
+    completionContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 30,
+    },
+    completionEmoji: {
+        fontSize: 80,
+        marginBottom: 20,
+    },
+    completionTitle: {
+        fontSize: 28,
+        fontWeight: "bold",
+        color: "#333",
+        marginBottom: 15,
+        textAlign: "center",
+    },
+    completionText: {
+        fontSize: 18,
+        color: "#666",
+        textAlign: "center",
+        marginBottom: 40,
+        lineHeight: 26,
+    },
+    resetButton: {
+        backgroundColor: "#FF9800",
+        paddingVertical: 15,
+        paddingHorizontal: 40,
+        borderRadius: 25,
+        marginBottom: 15,
+    },
+    resetButtonText: {
+        color: "white",
+        fontSize: 18,
+        fontWeight: "bold",
+    },
+    homeButton: {
+        backgroundColor: "#2196F3",
+        paddingVertical: 15,
+        paddingHorizontal: 40,
+        borderRadius: 25,
+    },
+    homeButtonText: {
+        color: "white",
+        fontSize: 18,
         fontWeight: "bold",
     },
 });
