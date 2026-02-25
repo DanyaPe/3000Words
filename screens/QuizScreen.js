@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { getAllWords, getWordsByTopic, getWordId } from "../utils/wordsManager";
+import { getWordsByTopic, getWordId } from "../utils/wordsManager";
 import { recordAttempt } from "../utils/progressManager";
 
 export default function QuizScreen({ navigation, route }) {
     const [words, setWords] = useState([]);
-    const [allWords, setAllWords] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [options, setOptions] = useState([]);
     const [selectedOption, setSelectedOption] = useState(null);
@@ -19,15 +18,12 @@ export default function QuizScreen({ navigation, route }) {
     }, [topic]);
 
     useEffect(() => {
-        if (words.length > 0 && allWords.length > 0) {
+        if (words.length > 0) {
             generateOptions();
         }
     }, [currentIndex, words, direction]);
 
     const loadWords = () => {
-        const all = getAllWords();
-        setAllWords(all);
-
         const topicWords = getWordsByTopic(topic);
         const shuffled = [...topicWords].sort(() => 0.5 - Math.random());
         setWords(shuffled.slice(0, 30));
@@ -42,8 +38,10 @@ export default function QuizScreen({ navigation, route }) {
         const correctAnswer =
             direction === "en-ru" ? currentWord.russian : currentWord.english;
 
-        // Генерируем 3 неправильных варианта
-        const wrongOptions = allWords
+        // ВАЖНО: берём неправильные варианты только из текущей темы
+        const topicWords = getWordsByTopic(topic); // Используем слова только из текущей темы
+
+        const wrongOptions = topicWords
             .filter((w) => {
                 const answer = direction === "en-ru" ? w.russian : w.english;
                 return answer !== correctAnswer;
