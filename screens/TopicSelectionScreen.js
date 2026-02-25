@@ -115,7 +115,6 @@ export default function TopicSelectionScreen({ navigation, route }) {
             <Text style={styles.title}>Выберите тему</Text>
             <Text style={styles.subtitle}>{getModeTitle()}</Text>
 
-            {/* Фильтры - зафиксированы под заголовком */}
             <View>
                 <ScrollView
                     horizontal
@@ -213,7 +212,11 @@ export default function TopicSelectionScreen({ navigation, route }) {
                     const status = topicsStatus[item.name] || "new";
                     return (
                         <TouchableOpacity
-                            style={styles.topicItem}
+                            style={
+                                status === "completed"
+                                    ? styles.completedTopicItem
+                                    : styles.topicItem
+                            }
                             onPress={() => handleTopicSelect(item.name)}
                         >
                             <View style={styles.topicInfo}>
@@ -326,6 +329,17 @@ const styles = StyleSheet.create({
     },
     topicItem: {
         backgroundColor: "white",
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    completedTopicItem: {
+        backgroundColor: "#4CAF50",
         padding: 15,
         borderRadius: 12,
         marginBottom: 12,
