@@ -123,29 +123,6 @@ const saveViewedWords = async (viewedWords) => {
     }
 };
 
-// Отметить слово как просмотренное для конкретной темы и режима
-export const markWordAsViewed = async (wordId, topic, mode) => {
-    const viewedWords = await getViewedWords();
-    const key = `${mode}_${topic || "all"}`;
-
-    if (!viewedWords[key]) {
-        viewedWords[key] = [];
-    }
-
-    if (!viewedWords[key].includes(wordId)) {
-        viewedWords[key].push(wordId);
-    }
-
-    await saveViewedWords(viewedWords);
-};
-
-// Получить список просмотренных слов для темы и режима
-export const getViewedWordsForTopicAndMode = async (topic, mode) => {
-    const viewedWords = await getViewedWords();
-    const key = `${mode}_${topic || "all"}`;
-    return viewedWords[key] || [];
-};
-
 // Сбросить статус слов для конкретной темы и режима
 export const resetWordStatusForTopic = async (topic, mode) => {
     const progress = await getProgress();
@@ -167,11 +144,34 @@ export const resetWordStatusForTopic = async (topic, mode) => {
     await saveProgress(progress);
 };
 
-// Обновленная функция сброса - теперь сбрасывает и просмотренные и статус
+// Отметить слово как просмотренное для конкретной темы и режима
+export const markWordAsViewed = async (wordId, topic, mode) => {
+    const viewedWords = await getViewedWords();
+    const key = `${mode.toLowerCase()}_${topic || "all"}`; // ← Добавили .toLowerCase()
+
+    if (!viewedWords[key]) {
+        viewedWords[key] = [];
+    }
+
+    if (!viewedWords[key].includes(wordId)) {
+        viewedWords[key].push(wordId);
+    }
+
+    await saveViewedWords(viewedWords);
+};
+
+// Получить список просмотренных слов для темы и режима
+export const getViewedWordsForTopicAndMode = async (topic, mode) => {
+    const viewedWords = await getViewedWords();
+    const key = `${mode.toLowerCase()}_${topic || "all"}`; // ← Добавили .toLowerCase()
+    return viewedWords[key] || [];
+};
+
+// Сбросить прогресс для конкретной темы и режима
 export const resetProgressForTopicAndMode = async (topic, mode) => {
     // Сбрасываем просмотренные слова
     const viewedWords = await getViewedWords();
-    const key = `${mode}_${topic || "all"}`;
+    const key = `${mode.toLowerCase()}_${topic || "all"}`; // ← Добавили .toLowerCase()
     delete viewedWords[key];
     await saveViewedWords(viewedWords);
 
@@ -185,4 +185,34 @@ export const getViewedStats = async (topic, mode) => {
     return {
         viewedCount: viewedWordIds.length,
     };
+};
+
+// Получить статус темы для конкретного режима
+export const getTopicStatus = async (topic, mode) => {
+    const viewedWordIds = await getViewedWordsForTopicAndMode(topic, mode);
+    const { getWordsByTopic } = require("./wordsManager");
+    const topicWords = getWordsByTopic(topic);
+
+    if (viewedWordIds.length === 0) {
+        return "new";
+    } else if (viewedWordIds.length === topicWords.length) {
+        return "completed";
+    } else {
+        return "in_progress";
+    }
+};
+
+// Получить статистику по всем темам для конкретного режима
+export const getTopicsStatusForMode = async (mode) => {
+    const { getTopicsWithCounts } = require("./topicsManager");
+    const topics = getTopicsWithCounts();
+
+    const topicsStatus = {};
+
+    for (const topic of topics) {
+        const status = await getTopicStatus(topic.name, mode);
+        topicsStatus[topic.name] = status;
+    }
+
+    return topicsStatus;
 };
