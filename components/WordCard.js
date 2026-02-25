@@ -1,11 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
-export default function WordCard({
-    word,
-    showTranslation = false,
-    allowFlip = true,
-}) {
+export default function WordCard({ word, allowFlip = true }) {
     const [isFlipped, setIsFlipped] = useState(false);
 
     const handlePress = () => {

@@ -125,13 +125,9 @@ const saveViewedWords = async (viewedWords) => {
 };
 
 // Сбросить статус слов для конкретной темы и режима
-export const resetWordStatusForTopic = async (topic, mode) => {
+export const resetWordStatusForTopic = async (topic) => {
     const progress = await getProgress();
-    const {
-        getAllWords,
-        getWordsByTopic,
-        getWordId,
-    } = require("./wordsManager");
+    const { getWordsByTopic, getWordId } = require("./wordsManager");
 
     // Получаем слова темы
     const topicWords = getWordsByTopic(topic);

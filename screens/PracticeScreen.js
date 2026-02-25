@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -21,7 +21,6 @@ import {
 } from "../utils/progressManager";
 
 export default function PracticeScreen({ navigation, route }) {
-    const [allTopicWords, setAllTopicWords] = useState([]);
     const [words, setWords] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [userInput, setUserInput] = useState("");

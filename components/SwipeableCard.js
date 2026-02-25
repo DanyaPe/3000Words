@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react"; // Добавьте useEffect
+import { useRef, useState, useEffect } from "react"; // Добавьте useEffect
 import {
     Animated,
     PanResponder,
@@ -29,10 +29,10 @@ export default function SwipeableCard({
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
-            onPanResponderMove: (event, gesture) => {
+            onPanResponderMove: (_, gesture) => {
                 position.setValue({ x: gesture.dx, y: 0 });
             },
-            onPanResponderRelease: (event, gesture) => {
+            onPanResponderRelease: (_, gesture) => {
                 const { dx, dy } = gesture;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
         padding: 30,
     },
     mainText: {
-        fontSize: 48,
+        fontSize: 35,
         fontWeight: "bold",
         color: "#333",
         marginBottom: 15,
