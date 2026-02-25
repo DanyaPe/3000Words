@@ -146,12 +146,37 @@ export const getViewedWordsForTopicAndMode = async (topic, mode) => {
     return viewedWords[key] || [];
 };
 
-// Сбросить прогресс для конкретной темы и режима
+// Сбросить статус слов для конкретной темы и режима
+export const resetWordStatusForTopic = async (topic, mode) => {
+    const progress = await getProgress();
+    const {
+        getAllWords,
+        getWordsByTopic,
+        getWordId,
+    } = require("./wordsManager");
+
+    // Получаем слова темы
+    const topicWords = getWordsByTopic(topic);
+
+    // Удаляем статус для каждого слова из темы
+    topicWords.forEach((word) => {
+        const wordId = getWordId(word);
+        delete progress[wordId];
+    });
+
+    await saveProgress(progress);
+};
+
+// Обновленная функция сброса - теперь сбрасывает и просмотренные и статус
 export const resetProgressForTopicAndMode = async (topic, mode) => {
+    // Сбрасываем просмотренные слова
     const viewedWords = await getViewedWords();
     const key = `${mode}_${topic || "all"}`;
     delete viewedWords[key];
     await saveViewedWords(viewedWords);
+
+    // Сбрасываем статус слов (learned/learning)
+    await resetWordStatusForTopic(topic, mode);
 };
 
 // Получить статистику по просмотренным словам для темы и режима

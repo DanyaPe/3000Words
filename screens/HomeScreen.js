@@ -10,7 +10,7 @@ export default function HomeScreen({ navigation }) {
     useEffect(() => {
         loadData();
 
-        // Обновляем статистику при возврате на экран
+        // Обновляем статистику при возврате на экран (после сброса прогресса)
         const unsubscribe = navigation.addListener("focus", () => {
             loadData();
         });
