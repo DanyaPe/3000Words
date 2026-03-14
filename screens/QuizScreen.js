@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { getWordsByTopic, getWordId } from "../utils/wordsManager";
+import {
+    getWordsByTopic,
+    getWordId,
+    getWordsByTopicWithCustom,
+} from "../utils/wordsManager";
 import {
     recordAttempt,
     markWordAsViewed,
@@ -34,40 +38,36 @@ export default function QuizScreen({ navigation, route }) {
     }, [currentIndex, words, direction]);
 
     const loadWords = async () => {
-        const topicWords = getWordsByTopic(topic);
+        const topicWords = await getWordsByTopicWithCustom(topic); // ← Изменили
         setTotalCount(topicWords.length);
 
-        // Получаем список просмотренных слов
         const viewedWordIds = await getViewedWordsForTopicAndMode(
             topic,
             "quiz",
         );
         setViewedCount(viewedWordIds.length);
 
-        // Загружаем сохранённую статистику сессии
         const savedStats = await getSessionStats(topic, "quiz");
         setStats(savedStats);
 
-        // Фильтруем непросмотренные слова
         const unviewedWords = topicWords.filter((word) => {
             const wordId = getWordId(word);
             return !viewedWordIds.includes(wordId);
         });
 
-        // Перемешиваем непросмотренные
         const shuffled = [...unviewedWords].sort(() => 0.5 - Math.random());
         setWords(shuffled);
         setCurrentIndex(0);
     };
 
-    const generateOptions = () => {
+    const generateOptions = async () => {
         if (words.length === 0 || currentIndex >= words.length) return;
 
         const currentWord = words[currentIndex];
         const correctAnswer =
             direction === "en-ru" ? currentWord.russian : currentWord.english;
 
-        const topicWords = getWordsByTopic(topic);
+        const topicWords = await getWordsByTopicWithCustom(topic); // ← Изменили
 
         const wrongOptions = topicWords
             .filter((w) => {

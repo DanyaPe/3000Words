@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import SwipeableCard from "../components/SwipeableCard";
-import { getWordsByTopic, getWordId } from "../utils/wordsManager";
+import { getWordId, getWordsByTopicWithCustom } from "../utils/wordsManager";
 import {
     markWordAsKnown,
     markWordAsLearning,
@@ -23,7 +23,7 @@ export default function FlashcardsScreen({ navigation, route }) {
     }, [topic]);
 
     const loadWords = async () => {
-        const topicWords = getWordsByTopic(topic);
+        const topicWords = await getWordsByTopicWithCustom(topic); // ← Изменили на WithCustom
         setTotalCount(topicWords.length);
 
         const viewedWordIds = await getViewedWordsForTopicAndMode(

@@ -5,6 +5,10 @@ import TopicSelectionScreen from "./screens/TopicSelectionScreen";
 import FlashcardsScreen from "./screens/FlashcardsScreen";
 import PracticeScreen from "./screens/PracticeScreen";
 import QuizScreen from "./screens/QuizScreen";
+import BrowseTopicsScreen from "./screens/BrowseTopicsScreen";
+import WordsListScreen from "./screens/WordsListScreen";
+import WordDetailScreen from "./screens/WordDetailScreen";
+import WordEditScreen from "./screens/WordEditScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +51,26 @@ export default function App() {
                     name="Quiz"
                     component={QuizScreen}
                     options={{ title: "Тест" }}
+                />
+                <Stack.Screen
+                    name="BrowseTopics"
+                    component={BrowseTopicsScreen}
+                    options={{ title: "Просмотр слов" }}
+                />
+                <Stack.Screen
+                    name="WordsList"
+                    component={WordsListScreen}
+                    options={{ title: "Список слов" }}
+                />
+                <Stack.Screen
+                    name="WordDetail"
+                    component={WordDetailScreen}
+                    options={{ title: "Слово" }}
+                />
+                <Stack.Screen
+                    name="WordEdit"
+                    component={WordEditScreen}
+                    options={{ title: "Редактирование" }}
                 />
             </Stack.Navigator>
         </NavigationContainer>

@@ -108,6 +108,16 @@ export default function HomeScreen({ navigation }) {
                         Выберите правильный ответ
                     </Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.modeButton, styles.browseButton]}
+                    onPress={() => navigation.navigate("BrowseTopics")}
+                >
+                    <Text style={styles.modeButtonText}>📖 Просмотр слов</Text>
+                    <Text style={styles.modeDescription}>
+                        Просмотр и редактирование
+                    </Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -190,5 +200,10 @@ const styles = StyleSheet.create({
     modeDescription: {
         fontSize: 14,
         color: "#666",
+    },
+    browseButton: {
+        backgroundColor: "#E8F5E9",
+        borderWidth: 2,
+        borderColor: "#4CAF50",
     },
 });

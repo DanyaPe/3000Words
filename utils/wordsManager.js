@@ -41,3 +41,38 @@ export const getRandomWords = (count, topic = null) => {
 export const getWordId = (word) => {
     return `${word.english}_${word.partOfSpeech}`;
 };
+
+// Получить слова с учётом пользовательских изменений
+export const getWordsWithCustom = async () => {
+    const { getCustomWords } = require("./customWordsManager");
+    const allWords = getAllWords();
+    const customWords = await getCustomWords();
+
+    return allWords.map((word) => {
+        const wordId = getWordId(word);
+        if (customWords[wordId]) {
+            return {
+                ...word,
+                ...customWords[wordId],
+            };
+        }
+        return word;
+    });
+};
+
+export const getWordsByTopicWithCustom = async (topic) => {
+    const { getCustomWords } = require("./customWordsManager");
+    const words = getWordsByTopic(topic);
+    const customWords = await getCustomWords();
+
+    return words.map((word) => {
+        const wordId = getWordId(word);
+        if (customWords[wordId]) {
+            return {
+                ...word,
+                ...customWords[wordId],
+            };
+        }
+        return word;
+    });
+};

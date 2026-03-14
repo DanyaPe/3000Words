@@ -9,7 +9,7 @@ import {
     Platform,
     Alert,
 } from "react-native";
-import { getWordsByTopic, getWordId } from "../utils/wordsManager";
+import { getWordId, getWordsByTopicWithCustom } from "../utils/wordsManager";
 import {
     recordAttempt,
     markWordAsViewed,
@@ -37,7 +37,7 @@ export default function PracticeScreen({ navigation, route }) {
     }, [topic]);
 
     const loadWords = async () => {
-        const topicWords = getWordsByTopic(topic);
+        const topicWords = await getWordsByTopicWithCustom(topic); // ← Изменили
         setTotalCount(topicWords.length);
 
         const viewedWordIds = await getViewedWordsForTopicAndMode(
@@ -46,7 +46,6 @@ export default function PracticeScreen({ navigation, route }) {
         );
         setViewedCount(viewedWordIds.length);
 
-        // Загружаем сохранённую статистику сессии
         const savedStats = await getSessionStats(topic, "practice");
         setStats(savedStats);
 
