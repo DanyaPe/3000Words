@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+} from "react-native";
 import { getStatistics } from "../utils/progressManager";
 import { getAllWords } from "../utils/wordsManager";
 
@@ -10,7 +16,6 @@ export default function HomeScreen({ navigation }) {
     useEffect(() => {
         loadData();
 
-        // Обновляем статистику при возврате на экран (после сброса прогресса)
         const unsubscribe = navigation.addListener("focus", () => {
             loadData();
         });
@@ -27,7 +32,10 @@ export default function HomeScreen({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.scrollContent}
+        >
             <Text style={styles.title}>English Learning</Text>
 
             {stats && (
@@ -119,7 +127,7 @@ export default function HomeScreen({ navigation }) {
                     </Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
@@ -127,7 +135,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#f5f5f5",
+    },
+    scrollContent: {
         padding: 20,
+        paddingBottom: 40,
     },
     title: {
         fontSize: 32,
@@ -170,9 +181,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#666",
         marginTop: 5,
-    },
-    modesContainer: {
-        flex: 1,
     },
     modesTitle: {
         fontSize: 18,

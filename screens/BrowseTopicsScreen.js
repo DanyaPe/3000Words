@@ -87,9 +87,15 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "600",
         color: "#333",
+        flex: 1,
+        flexWrap: "wrap",
+        marginRight: 10,
     },
     topicCount: {
         fontSize: 14,
         color: "#666",
+        flexShrink: 0,
+        minWidth: 60,
+        textAlign: "right",
     },
 });

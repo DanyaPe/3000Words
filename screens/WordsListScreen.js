@@ -100,16 +100,19 @@ const styles = StyleSheet.create({
     },
     wordContent: {
         flex: 1,
+        marginRight: 10,
     },
     english: {
         fontSize: 18,
         fontWeight: "600",
         color: "#333",
         marginBottom: 4,
+        flexWrap: "wrap",
     },
     russian: {
         fontSize: 16,
         color: "#666",
+        flexWrap: "wrap",
     },
     customBadge: {
         marginLeft: 10,

@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         backgroundColor: "#e0e0e0",
         marginRight: 10,
-        height: 40, // Фиксированная высота
+        height: 40,
         justifyContent: "center",
         alignItems: "center",
     },
@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingTop: 0,
     },
-    topicItem: {
-        backgroundColor: "white",
+    completedTopicItem: {
+        backgroundColor: "#4CAF50",
         padding: 15,
         borderRadius: 12,
         marginBottom: 12,
@@ -338,8 +338,8 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 2,
     },
-    completedTopicItem: {
-        backgroundColor: "#4CAF50",
+    topicItem: {
+        backgroundColor: "white",
         padding: 15,
         borderRadius: 12,
         marginBottom: 12,
@@ -357,12 +357,15 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         marginBottom: 8,
+        flex: 1,
     },
     topicName: {
         fontSize: 18,
         fontWeight: "600",
         color: "#333",
         flex: 1,
+        flexWrap: "wrap",
+        marginRight: 10,
     },
     statusBadge: {
         paddingHorizontal: 10,
