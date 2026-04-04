@@ -19,7 +19,6 @@ export default function TopicSelectionScreen({ navigation, route }) {
     useEffect(() => {
         loadTopics();
 
-        // Обновляем статусы при возврате на экран (после прохождения темы)
         const unsubscribe = navigation.addListener("focus", () => {
             loadTopics();
         });
@@ -31,7 +30,6 @@ export default function TopicSelectionScreen({ navigation, route }) {
         const topicsData = getTopicsWithCounts();
         setTopics(topicsData);
 
-        // Загружаем статус для каждой темы
         const statuses = await getTopicsStatusForMode(mode);
         setTopicsStatus(statuses);
     };

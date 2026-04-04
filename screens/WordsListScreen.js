@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -15,7 +15,6 @@ export default function WordsListScreen({ navigation, route }) {
     useEffect(() => {
         loadWords();
 
-        // Обновляем список при возврате (после редактирования)
         const unsubscribe = navigation.addListener("focus", () => {
             loadWords();
         });

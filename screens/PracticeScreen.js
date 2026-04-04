@@ -37,7 +37,7 @@ export default function PracticeScreen({ navigation, route }) {
     }, [topic]);
 
     const loadWords = async () => {
-        const topicWords = await getWordsByTopicWithCustom(topic); // ← Изменили
+        const topicWords = await getWordsByTopicWithCustom(topic);
         setTotalCount(topicWords.length);
 
         const viewedWordIds = await getViewedWordsForTopicAndMode(
@@ -87,7 +87,6 @@ export default function PracticeScreen({ navigation, route }) {
         };
         setStats(newStats);
 
-        // Сохраняем статистику в AsyncStorage
         await saveSessionStats(
             topic,
             "practice",
@@ -105,7 +104,6 @@ export default function PracticeScreen({ navigation, route }) {
         if (currentIndex < words.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
-            // Сессия завершена
             showCompletionDialog();
         }
     };

@@ -15,7 +15,7 @@ export default function FlashcardsScreen({ navigation, route }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [viewedCount, setViewedCount] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
-    const [direction, setDirection] = useState("en-ru"); // Добавили состояние направления
+    const [direction, setDirection] = useState("en-ru");
     const { topic } = route.params || {};
 
     useEffect(() => {
@@ -23,7 +23,7 @@ export default function FlashcardsScreen({ navigation, route }) {
     }, [topic]);
 
     const loadWords = async () => {
-        const topicWords = await getWordsByTopicWithCustom(topic); // ← Изменили на WithCustom
+        const topicWords = await getWordsByTopicWithCustom(topic);
         setTotalCount(topicWords.length);
 
         const viewedWordIds = await getViewedWordsForTopicAndMode(
@@ -110,7 +110,6 @@ export default function FlashcardsScreen({ navigation, route }) {
         );
     };
 
-    // Новая функция переключения направления
     const toggleDirection = () => {
         setDirection((prev) => (prev === "en-ru" ? "ru-en" : "en-ru"));
     };

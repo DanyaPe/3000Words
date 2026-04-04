@@ -1,10 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PROGRESS_KEY = "@word_progress";
-const VIEWED_WORDS_KEY = "@viewed_words"; // Новый ключ для просмотренных слов
+const VIEWED_WORDS_KEY = "@viewed_words";
 const SESSION_STATS_KEY = "@session_stats";
 
-// Получить весь прогресс
 export const getProgress = async () => {
     try {
         const progress = await AsyncStorage.getItem(PROGRESS_KEY);
@@ -15,7 +14,6 @@ export const getProgress = async () => {
     }
 };
 
-// Сохранить прогресс
 export const saveProgress = async (progress) => {
     try {
         await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
@@ -24,7 +22,6 @@ export const saveProgress = async (progress) => {
     }
 };
 
-// Обновить прогресс для конкретного слова
 export const updateWordProgress = async (wordId, updates) => {
     const progress = await getProgress();
     progress[wordId] = {
@@ -35,7 +32,6 @@ export const updateWordProgress = async (wordId, updates) => {
     await saveProgress(progress);
 };
 
-// Получить статус конкретного слова
 export const getWordStatus = async (wordId) => {
     const progress = await getProgress();
     return (
@@ -48,7 +44,6 @@ export const getWordStatus = async (wordId) => {
     );
 };
 
-// Отметить слово как "знаю"
 export const markWordAsKnown = async (wordId) => {
     await updateWordProgress(wordId, {
         status: "learned",
@@ -56,14 +51,12 @@ export const markWordAsKnown = async (wordId) => {
     });
 };
 
-// Отметить слово как "еще учу"
 export const markWordAsLearning = async (wordId) => {
     await updateWordProgress(wordId, {
         status: "learning",
     });
 };
 
-// Записать результат попытки (правильно/неправильно)
 export const recordAttempt = async (wordId, isCorrect) => {
     const currentStatus = await getWordStatus(wordId);
     const updates = {
@@ -71,7 +64,6 @@ export const recordAttempt = async (wordId, isCorrect) => {
         incorrectCount: currentStatus.incorrectCount + (isCorrect ? 0 : 1),
     };
 
-    // Автоматически переводим в "learned" после 3 правильных ответов подряд
     if (isCorrect && currentStatus.correctCount + 1 >= 3) {
         updates.status = "learned";
     } else if (!isCorrect) {
@@ -81,7 +73,6 @@ export const recordAttempt = async (wordId, isCorrect) => {
     await updateWordProgress(wordId, updates);
 };
 
-// Получить статистику
 export const getStatistics = async () => {
     const progress = await getProgress();
     const stats = {
@@ -99,9 +90,6 @@ export const getStatistics = async () => {
     return stats;
 };
 
-// ========== НОВЫЕ ФУНКЦИИ ДЛЯ ПРОСМОТРЕННЫХ СЛОВ ==========
-
-// Получить просмотренные слова по темам и режимам
 export const getViewedWords = async () => {
     try {
         const viewed = await AsyncStorage.getItem(VIEWED_WORDS_KEY);
@@ -112,7 +100,6 @@ export const getViewedWords = async () => {
     }
 };
 
-// Сохранить просмотренные слова
 const saveViewedWords = async (viewedWords) => {
     try {
         await AsyncStorage.setItem(
@@ -124,15 +111,12 @@ const saveViewedWords = async (viewedWords) => {
     }
 };
 
-// Сбросить статус слов для конкретной темы и режима
 export const resetWordStatusForTopic = async (topic) => {
     const progress = await getProgress();
     const { getWordsByTopic, getWordId } = require("./wordsManager");
 
-    // Получаем слова темы
     const topicWords = getWordsByTopic(topic);
 
-    // Удаляем статус для каждого слова из темы
     topicWords.forEach((word) => {
         const wordId = getWordId(word);
         delete progress[wordId];
@@ -141,10 +125,9 @@ export const resetWordStatusForTopic = async (topic) => {
     await saveProgress(progress);
 };
 
-// Отметить слово как просмотренное для конкретной темы и режима
 export const markWordAsViewed = async (wordId, topic, mode) => {
     const viewedWords = await getViewedWords();
-    const key = `${mode.toLowerCase()}_${topic || "all"}`; // ← Добавили .toLowerCase()
+    const key = `${mode.toLowerCase()}_${topic || "all"}`;
 
     if (!viewedWords[key]) {
         viewedWords[key] = [];
@@ -157,26 +140,21 @@ export const markWordAsViewed = async (wordId, topic, mode) => {
     await saveViewedWords(viewedWords);
 };
 
-// Получить список просмотренных слов для темы и режима
 export const getViewedWordsForTopicAndMode = async (topic, mode) => {
     const viewedWords = await getViewedWords();
-    const key = `${mode.toLowerCase()}_${topic || "all"}`; // ← Добавили .toLowerCase()
+    const key = `${mode.toLowerCase()}_${topic || "all"}`;
     return viewedWords[key] || [];
 };
 
-// Сбросить прогресс для конкретной темы и режима
 export const resetProgressForTopicAndMode = async (topic, mode) => {
-    // Сбрасываем просмотренные слова
     const viewedWords = await getViewedWords();
-    const key = `${mode.toLowerCase()}_${topic || "all"}`; // ← Добавили .toLowerCase()
+    const key = `${mode.toLowerCase()}_${topic || "all"}`;
     delete viewedWords[key];
     await saveViewedWords(viewedWords);
 
-    // Сбрасываем статус слов (learned/learning)
     await resetWordStatusForTopic(topic, mode);
 };
 
-// Получить статистику по просмотренным словам для темы и режима
 export const getViewedStats = async (topic, mode) => {
     const viewedWordIds = await getViewedWordsForTopicAndMode(topic, mode);
     return {
@@ -184,7 +162,6 @@ export const getViewedStats = async (topic, mode) => {
     };
 };
 
-// Получить статус темы для конкретного режима
 export const getTopicStatus = async (topic, mode) => {
     const viewedWordIds = await getViewedWordsForTopicAndMode(topic, mode);
     const { getWordsByTopic } = require("./wordsManager");
@@ -199,7 +176,6 @@ export const getTopicStatus = async (topic, mode) => {
     }
 };
 
-// Получить статистику по всем темам для конкретного режима
 export const getTopicsStatusForMode = async (mode) => {
     const { getTopicsWithCounts } = require("./topicsManager");
     const topics = getTopicsWithCounts();
@@ -214,7 +190,6 @@ export const getTopicsStatusForMode = async (mode) => {
     return topicsStatus;
 };
 
-// Получить статистику сессии для темы и режима
 export const getSessionStats = async (topic, mode) => {
     try {
         const allStats = await AsyncStorage.getItem(SESSION_STATS_KEY);
@@ -227,7 +202,6 @@ export const getSessionStats = async (topic, mode) => {
     }
 };
 
-// Сохранить статистику сессии
 export const saveSessionStats = async (topic, mode, correct, incorrect) => {
     try {
         const allStats = await AsyncStorage.getItem(SESSION_STATS_KEY);
@@ -240,7 +214,6 @@ export const saveSessionStats = async (topic, mode, correct, incorrect) => {
     }
 };
 
-// Сбросить статистику сессии для темы и режима
 export const resetSessionStats = async (topic, mode) => {
     try {
         const allStats = await AsyncStorage.getItem(SESSION_STATS_KEY);

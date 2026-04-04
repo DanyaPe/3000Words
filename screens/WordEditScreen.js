@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
     View,
     Text,
@@ -15,7 +15,6 @@ import { saveCustomWord } from "../utils/customWordsManager";
 
 export default function WordEditScreen({ navigation, route }) {
     const originalWord = route.params.word;
-    const { topic } = route.params;
 
     const [english, setEnglish] = useState(originalWord.english);
     const [transcription, setTranscription] = useState(
@@ -24,7 +23,6 @@ export default function WordEditScreen({ navigation, route }) {
     const [russian, setRussian] = useState(originalWord.russian);
 
     const handleSave = async () => {
-        // Валидация
         if (!english.trim()) {
             Alert.alert("Ошибка", "Английское слово не может быть пустым");
             return;

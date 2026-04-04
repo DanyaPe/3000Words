@@ -13,7 +13,6 @@ export default function WordCard({ word, allowFlip = true }) {
     const CardContent = (
         <View style={styles.cardContent}>
             {!isFlipped ? (
-                // Лицевая сторона - английское слово
                 <>
                     <Text style={styles.mainText}>{word.english}</Text>
                     <Text style={styles.transcription}>
@@ -26,7 +25,6 @@ export default function WordCard({ word, allowFlip = true }) {
                     )}
                 </>
             ) : (
-                // Обратная сторона - русский перевод
                 <>
                     <Text style={styles.mainText}>{word.russian}</Text>
                     <Text style={styles.partOfSpeech}>{word.partOfSpeech}</Text>
@@ -48,7 +46,6 @@ export default function WordCard({ word, allowFlip = true }) {
         );
     }
 
-    // Если переворот отключен, не используем TouchableOpacity
     return <View style={styles.card}>{CardContent}</View>;
 }
 

@@ -5,7 +5,6 @@ import adverbs from "../data/adverbs";
 import prepositions from "../data/prepositions";
 import conjunctions from "../data/conjunctions";
 
-// Объединяем все слова в один массив
 export const getAllWords = () => {
     return [
         ...verbs,
@@ -17,32 +16,27 @@ export const getAllWords = () => {
     ];
 };
 
-// Получить слова по части речи
 export const getWordsByPartOfSpeech = (partOfSpeech) => {
     const allWords = getAllWords();
     return allWords.filter((word) => word.partOfSpeech === partOfSpeech);
 };
 
-// Получить слова по теме
 export const getWordsByTopic = (topic) => {
     const allWords = getAllWords();
-    if (!topic) return allWords; // Если тема не указана, возвращаем все слова
+    if (!topic) return allWords;
     return allWords.filter((word) => word.topic === topic);
 };
 
-// Получить случайные слова
 export const getRandomWords = (count, topic = null) => {
     const words = topic ? getWordsByTopic(topic) : getAllWords();
     const shuffled = [...words].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
 };
 
-// Создать уникальный ID для слова (для отслеживания прогресса)
 export const getWordId = (word) => {
     return `${word.english}_${word.partOfSpeech}`;
 };
 
-// Получить слова с учётом пользовательских изменений
 export const getWordsWithCustom = async () => {
     const { getCustomWords } = require("./customWordsManager");
     const allWords = getAllWords();

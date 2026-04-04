@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react"; // Добавьте useEffect
+import { useRef, useState, useEffect } from "react";
 import {
     Animated,
     PanResponder,
@@ -21,7 +21,6 @@ export default function SwipeableCard({
     const position = useRef(new Animated.ValueXY()).current;
     const [isFlipped, setIsFlipped] = useState(false);
 
-    // Сбрасываем переворот при изменении направления
     useEffect(() => {
         setIsFlipped(false);
     }, [direction]);
@@ -93,7 +92,6 @@ export default function SwipeableCard({
         };
     };
 
-    // Определяем что показывать на лицевой и обратной стороне
     const frontText = direction === "en-ru" ? word.english : word.russian;
     const frontTranscription =
         direction === "en-ru" ? word.transcription : null;
@@ -121,7 +119,6 @@ export default function SwipeableCard({
                     ) : (
                         <>
                             <Text style={styles.mainText}>{backText}</Text>
-                            {/* Показываем транскрипцию на обратной стороне если направление RU→EN */}
                             {direction === "ru-en" && (
                                 <Text style={styles.transcription}>
                                     {word.transcription}

@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import {
-    getWordsByTopic,
-    getWordId,
-    getWordsByTopicWithCustom,
-} from "../utils/wordsManager";
+import { getWordId, getWordsByTopicWithCustom } from "../utils/wordsManager";
 import {
     recordAttempt,
     markWordAsViewed,
@@ -38,7 +34,7 @@ export default function QuizScreen({ navigation, route }) {
     }, [currentIndex, words, direction]);
 
     const loadWords = async () => {
-        const topicWords = await getWordsByTopicWithCustom(topic); // ← Изменили
+        const topicWords = await getWordsByTopicWithCustom(topic);
         setTotalCount(topicWords.length);
 
         const viewedWordIds = await getViewedWordsForTopicAndMode(
@@ -67,7 +63,7 @@ export default function QuizScreen({ navigation, route }) {
         const correctAnswer =
             direction === "en-ru" ? currentWord.russian : currentWord.english;
 
-        const topicWords = await getWordsByTopicWithCustom(topic); // ← Изменили
+        const topicWords = await getWordsByTopicWithCustom(topic);
 
         const wrongOptions = topicWords
             .filter((w) => {
@@ -97,19 +93,16 @@ export default function QuizScreen({ navigation, route }) {
             direction === "en-ru" ? currentWord.russian : currentWord.english;
         const isCorrect = option === correctAnswer;
 
-        // Сохраняем результат
         const wordId = getWordId(currentWord);
         await recordAttempt(wordId, isCorrect);
         await markWordAsViewed(wordId, topic, "quiz");
 
-        // Обновляем статистику
         const newStats = {
             correct: stats.correct + (isCorrect ? 1 : 0),
             incorrect: stats.incorrect + (isCorrect ? 0 : 1),
         };
         setStats(newStats);
 
-        // Сохраняем статистику в AsyncStorage
         await saveSessionStats(
             topic,
             "quiz",

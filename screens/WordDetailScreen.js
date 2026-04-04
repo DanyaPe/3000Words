@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { getWordId } from "../utils/wordsManager";
 import { resetCustomWord } from "../utils/customWordsManager";
@@ -8,7 +8,6 @@ export default function WordDetailScreen({ navigation, route }) {
     const { topic } = route.params;
 
     useEffect(() => {
-        // Обновляем слово при возврате с экрана редактирования
         const unsubscribe = navigation.addListener("focus", () => {
             if (route.params.word) {
                 setWord(route.params.word);

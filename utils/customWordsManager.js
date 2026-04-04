@@ -1,9 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getAllWords, getWordId } from "./wordsManager";
+import { getWordId } from "./wordsManager";
 
 const CUSTOM_WORDS_KEY = "@custom_words";
 
-// Получить все изменённые слова
 export const getCustomWords = async () => {
     try {
         const customWords = await AsyncStorage.getItem(CUSTOM_WORDS_KEY);
@@ -14,7 +13,6 @@ export const getCustomWords = async () => {
     }
 };
 
-// Сохранить изменённое слово
 export const saveCustomWord = async (wordId, customData) => {
     try {
         const customWords = await getCustomWords();
@@ -32,11 +30,9 @@ export const saveCustomWord = async (wordId, customData) => {
     }
 };
 
-// Получить слово (с учётом изменений)
 export const getWord = async (wordId, originalWord) => {
     const customWords = await getCustomWords();
     if (customWords[wordId]) {
-        // Возвращаем изменённую версию
         return {
             ...originalWord,
             ...customWords[wordId],
@@ -45,7 +41,6 @@ export const getWord = async (wordId, originalWord) => {
     return originalWord;
 };
 
-// Сбросить изменения для слова
 export const resetCustomWord = async (wordId) => {
     try {
         const customWords = await getCustomWords();
@@ -59,7 +54,6 @@ export const resetCustomWord = async (wordId) => {
     }
 };
 
-// Получить все слова темы с учётом изменений
 export const getTopicWordsWithCustom = async (topic) => {
     const { getWordsByTopic } = require("./wordsManager");
     const originalWords = getWordsByTopic(topic);
