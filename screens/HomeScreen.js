@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { getStatistics } from "../utils/progressManager";
+import { getAllWords } from "../utils/wordsManager";
 import {
     View,
     Text,
@@ -6,8 +8,6 @@ import {
     TouchableOpacity,
     ScrollView,
 } from "react-native";
-import { getStatistics } from "../utils/progressManager";
-import { getAllWords } from "../utils/wordsManager";
 
 export default function HomeScreen({ navigation }) {
     const [stats, setStats] = useState(null);
@@ -39,7 +39,11 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.title}>English Learning</Text>
 
             {stats && (
-                <View style={styles.statsContainer}>
+                <TouchableOpacity
+                    style={styles.statsContainer}
+                    onPress={() => navigation.navigate("LearningWords")}
+                    activeOpacity={0.7}
+                >
                     <Text style={styles.statsTitle}>Ваш прогресс</Text>
                     <View style={styles.statsRow}>
                         <View style={styles.statItem}>
@@ -71,7 +75,15 @@ export default function HomeScreen({ navigation }) {
                             <Text style={styles.statLabel}>Выучено</Text>
                         </View>
                     </View>
-                </View>
+
+                    {stats.learning > 0 && (
+                        <View style={styles.tapHintContainer}>
+                            <Text style={styles.tapHint}>
+                                👆 Нажмите для практики изучаемых слов
+                            </Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
             )}
 
             <View style={styles.modesContainer}>
@@ -213,5 +225,17 @@ const styles = StyleSheet.create({
         backgroundColor: "#E8F5E9",
         borderWidth: 2,
         borderColor: "#4CAF50",
+    },
+    tapHintContainer: {
+        marginTop: 15,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: "#eee",
+    },
+    tapHint: {
+        fontSize: 12,
+        color: "#999",
+        textAlign: "center",
+        fontStyle: "italic",
     },
 });

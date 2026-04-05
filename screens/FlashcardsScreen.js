@@ -23,7 +23,19 @@ export default function FlashcardsScreen({ navigation, route }) {
     }, [topic]);
 
     const loadWords = async () => {
-        const topicWords = await getWordsByTopicWithCustom(topic);
+        let topicWords;
+
+        if (route.params?.learningMode && route.params?.selectedTopics) {
+            const {
+                getLearningWordsFromTopics,
+            } = require("../utils/wordsManager");
+            topicWords = await getLearningWordsFromTopics(
+                route.params.selectedTopics,
+            );
+        } else {
+            topicWords = await getWordsByTopicWithCustom(topic);
+        }
+
         setTotalCount(topicWords.length);
 
         const viewedWordIds = await getViewedWordsForTopicAndMode(

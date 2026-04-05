@@ -34,7 +34,7 @@ export const getRandomWords = (count, topic = null) => {
 };
 
 export const getWordId = (word) => {
-    return `${word.english}_${word.partOfSpeech}`;
+    return `${word.english}_${word.partOfSpeech}_${word.topic}`;
 };
 
 export const getWordsWithCustom = async () => {
@@ -69,4 +69,28 @@ export const getWordsByTopicWithCustom = async (topic) => {
         }
         return word;
     });
+};
+
+export const getLearningWordsFromTopics = async (selectedTopics) => {
+    const { getProgress, getLearningWords } = require("./progressManager");
+    const learningWordIds = await getLearningWords();
+    const customWords = await require("./customWordsManager").getCustomWords();
+
+    const allWords = getAllWords();
+
+    return allWords
+        .filter((word) => {
+            const wordId = getWordId(word);
+            return (
+                selectedTopics.includes(word.topic) &&
+                learningWordIds.includes(wordId)
+            );
+        })
+        .map((word) => {
+            const wordId = getWordId(word);
+            if (customWords[wordId]) {
+                return { ...word, ...customWords[wordId] };
+            }
+            return word;
+        });
 };

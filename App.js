@@ -9,6 +9,7 @@ import BrowseTopicsScreen from "./screens/BrowseTopicsScreen";
 import WordsListScreen from "./screens/WordsListScreen";
 import WordDetailScreen from "./screens/WordDetailScreen";
 import WordEditScreen from "./screens/WordEditScreen";
+import LearningWordsScreen from "./screens/LearningWordsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -71,6 +72,11 @@ export default function App() {
                     name="WordEdit"
                     component={WordEditScreen}
                     options={{ title: "Редактирование" }}
+                />
+                <Stack.Screen
+                    name="LearningWords"
+                    component={LearningWordsScreen}
+                    options={{ title: "Слова на изучении" }}
                 />
             </Stack.Navigator>
         </NavigationContainer>

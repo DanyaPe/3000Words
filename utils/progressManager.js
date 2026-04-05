@@ -225,3 +225,47 @@ export const resetSessionStats = async (topic, mode) => {
         console.error("Ошибка сброса статистики сессии:", error);
     }
 };
+
+export const getLearningWords = async () => {
+    const progress = await getProgress();
+    const learningWordIds = [];
+
+    Object.entries(progress).forEach(([wordId, wordProgress]) => {
+        if (wordProgress.status === "learning") {
+            learningWordIds.push(wordId);
+        }
+    });
+
+    return learningWordIds;
+};
+
+export const getTopicsWithLearningWords = async () => {
+    const { getAllWords, getWordId } = require("./wordsManager");
+    const learningWordIds = await getLearningWords();
+    const allWords = getAllWords();
+
+    const topicsMap = {};
+
+    allWords.forEach((word) => {
+        const wordId = getWordId(word);
+        if (learningWordIds.includes(wordId)) {
+            if (!topicsMap[word.topic]) {
+                topicsMap[word.topic] = {
+                    name: word.topic,
+                    words: [],
+                };
+            }
+            topicsMap[word.topic].words.push(word);
+        }
+    });
+
+    const result = Object.values(topicsMap)
+        .map((topic) => ({
+            name: topic.name,
+            count: topic.words.length,
+            words: topic.words,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    return result;
+};
