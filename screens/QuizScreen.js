@@ -19,7 +19,6 @@ export default function QuizScreen({ navigation, route }) {
     const [showResult, setShowResult] = useState(false);
     const [direction, setDirection] = useState("en-ru");
     const [stats, setStats] = useState({ correct: 0, incorrect: 0 });
-    const [viewedCount, setViewedCount] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
     const { topic } = route.params || {};
 
@@ -34,22 +33,42 @@ export default function QuizScreen({ navigation, route }) {
     }, [currentIndex, words, direction]);
 
     const loadWords = async () => {
-        const topicWords = await getWordsByTopicWithCustom(topic);
+        let topicWords;
+
+        if (route.params?.learningMode && route.params?.selectedTopics) {
+            const {
+                getLearningWordsFromTopics,
+            } = require("../utils/wordsManager");
+            topicWords = await getLearningWordsFromTopics(
+                route.params.selectedTopics,
+            );
+        } else {
+            topicWords = await getWordsByTopicWithCustom(topic);
+        }
+
         setTotalCount(topicWords.length);
 
-        const viewedWordIds = await getViewedWordsForTopicAndMode(
-            topic,
-            "quiz",
-        );
-        setViewedCount(viewedWordIds.length);
+        let unviewedWords;
 
-        const savedStats = await getSessionStats(topic, "quiz");
-        setStats(savedStats);
+        if (route.params?.learningMode) {
+            unviewedWords = topicWords;
 
-        const unviewedWords = topicWords.filter((word) => {
-            const wordId = getWordId(word);
-            return !viewedWordIds.includes(wordId);
-        });
+            const savedStats = await getSessionStats(topic, "quiz");
+            setStats(savedStats);
+        } else {
+            const viewedWordIds = await getViewedWordsForTopicAndMode(
+                topic,
+                "quiz",
+            );
+
+            const savedStats = await getSessionStats(topic, "quiz");
+            setStats(savedStats);
+
+            unviewedWords = topicWords.filter((word) => {
+                const wordId = getWordId(word);
+                return !viewedWordIds.includes(wordId);
+            });
+        }
 
         const shuffled = [...unviewedWords].sort(() => 0.5 - Math.random());
         setWords(shuffled);
@@ -109,8 +128,6 @@ export default function QuizScreen({ navigation, route }) {
             newStats.correct,
             newStats.incorrect,
         );
-
-        setViewedCount((prev) => prev + 1);
     };
 
     const nextQuestion = () => {
@@ -215,7 +232,7 @@ export default function QuizScreen({ navigation, route }) {
             <View style={styles.header}>
                 <View style={styles.progressInfo}>
                     <Text style={styles.counter}>
-                        {viewedCount} / {totalCount} пройдено
+                        {currentIndex + 1} / {totalCount} пройдено
                     </Text>
                     <Text style={styles.remaining}>
                         Осталось: {words.length - currentIndex}

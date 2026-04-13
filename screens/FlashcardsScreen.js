@@ -13,7 +13,6 @@ import {
 export default function FlashcardsScreen({ navigation, route }) {
     const [words, setWords] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [viewedCount, setViewedCount] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
     const [direction, setDirection] = useState("en-ru");
     const { topic } = route.params || {};
@@ -38,16 +37,21 @@ export default function FlashcardsScreen({ navigation, route }) {
 
         setTotalCount(topicWords.length);
 
-        const viewedWordIds = await getViewedWordsForTopicAndMode(
-            topic,
-            "flashcards",
-        );
-        setViewedCount(viewedWordIds.length);
+        let unviewedWords;
 
-        const unviewedWords = topicWords.filter((word) => {
-            const wordId = getWordId(word);
-            return !viewedWordIds.includes(wordId);
-        });
+        if (route.params?.learningMode) {
+            unviewedWords = topicWords;
+        } else {
+            const viewedWordIds = await getViewedWordsForTopicAndMode(
+                topic,
+                "flashcards",
+            );
+
+            unviewedWords = topicWords.filter((word) => {
+                const wordId = getWordId(word);
+                return !viewedWordIds.includes(wordId);
+            });
+        }
 
         const shuffled = [...unviewedWords].sort(() => 0.5 - Math.random());
         setWords(shuffled);
@@ -77,8 +81,6 @@ export default function FlashcardsScreen({ navigation, route }) {
     };
 
     const nextCard = () => {
-        setViewedCount((prev) => prev + 1);
-
         if (currentIndex < words.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
@@ -165,7 +167,7 @@ export default function FlashcardsScreen({ navigation, route }) {
             <View style={styles.header}>
                 <View style={styles.progressInfo}>
                     <Text style={styles.counter}>
-                        {viewedCount} / {totalCount} просмотрено
+                        {currentIndex + 1} / {words.length} просмотрено
                     </Text>
                     <Text style={styles.remaining}>
                         Осталось: {words.length - currentIndex}

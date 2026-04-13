@@ -28,7 +28,6 @@ export default function PracticeScreen({ navigation, route }) {
     const [isCorrect, setIsCorrect] = useState(false);
     const [direction, setDirection] = useState("en-ru");
     const [stats, setStats] = useState({ correct: 0, incorrect: 0 });
-    const [viewedCount, setViewedCount] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
     const { topic } = route.params || {};
 
@@ -37,22 +36,42 @@ export default function PracticeScreen({ navigation, route }) {
     }, [topic]);
 
     const loadWords = async () => {
-        const topicWords = await getWordsByTopicWithCustom(topic);
+        let topicWords;
+
+        if (route.params?.learningMode && route.params?.selectedTopics) {
+            const {
+                getLearningWordsFromTopics,
+            } = require("../utils/wordsManager");
+            topicWords = await getLearningWordsFromTopics(
+                route.params.selectedTopics,
+            );
+        } else {
+            topicWords = await getWordsByTopicWithCustom(topic);
+        }
+
         setTotalCount(topicWords.length);
 
-        const viewedWordIds = await getViewedWordsForTopicAndMode(
-            topic,
-            "practice",
-        );
-        setViewedCount(viewedWordIds.length);
+        let unviewedWords;
 
-        const savedStats = await getSessionStats(topic, "practice");
-        setStats(savedStats);
+        if (route.params?.learningMode) {
+            unviewedWords = topicWords;
 
-        const unviewedWords = topicWords.filter((word) => {
-            const wordId = getWordId(word);
-            return !viewedWordIds.includes(wordId);
-        });
+            const savedStats = await getSessionStats(topic, "practice");
+            setStats(savedStats);
+        } else {
+            const viewedWordIds = await getViewedWordsForTopicAndMode(
+                topic,
+                "practice",
+            );
+
+            const savedStats = await getSessionStats(topic, "practice");
+            setStats(savedStats);
+
+            unviewedWords = topicWords.filter((word) => {
+                const wordId = getWordId(word);
+                return !viewedWordIds.includes(wordId);
+            });
+        }
 
         const shuffled = [...unviewedWords].sort(() => 0.5 - Math.random());
         setWords(shuffled);
@@ -93,8 +112,6 @@ export default function PracticeScreen({ navigation, route }) {
             newStats.correct,
             newStats.incorrect,
         );
-
-        setViewedCount((prev) => prev + 1);
     };
 
     const nextWord = () => {
@@ -207,7 +224,7 @@ export default function PracticeScreen({ navigation, route }) {
             <View style={styles.header}>
                 <View style={styles.progressInfo}>
                     <Text style={styles.counter}>
-                        {viewedCount} / {totalCount} пройдено
+                        {currentIndex + 1} / {totalCount} пройдено
                     </Text>
                     <Text style={styles.remaining}>
                         Осталось: {words.length - currentIndex}
