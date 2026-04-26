@@ -29,6 +29,7 @@ export default function PracticeScreen({ navigation, route }) {
     const [direction, setDirection] = useState("en-ru");
     const [stats, setStats] = useState({ correct: 0, incorrect: 0 });
     const [totalCount, setTotalCount] = useState(0);
+    const [answeredQuestions, setAnsweredQuestions] = useState({});
     const { topic } = route.params || {};
 
     useEffect(() => {
@@ -100,6 +101,11 @@ export default function PracticeScreen({ navigation, route }) {
         await recordAttempt(wordId, correct);
         await markWordAsViewed(wordId, topic, "practice");
 
+        setAnsweredQuestions((prev) => ({
+            ...prev,
+            [currentIndex]: { correct },
+        }));
+
         const newStats = {
             correct: stats.correct + (correct ? 1 : 0),
             incorrect: stats.incorrect + (correct ? 0 : 1),
@@ -112,6 +118,8 @@ export default function PracticeScreen({ navigation, route }) {
             newStats.correct,
             newStats.incorrect,
         );
+
+        setViewedCount((prev) => prev + 1);
     };
 
     const nextWord = () => {
@@ -170,6 +178,37 @@ export default function PracticeScreen({ navigation, route }) {
         setDirection((prev) => (prev === "en-ru" ? "ru-en" : "en-ru"));
         setUserInput("");
         setShowResult(false);
+    };
+
+    const goToPreviousWord = () => {
+        if (currentIndex > 0) {
+            const previousIndex = currentIndex - 1;
+
+            if (answeredQuestions[previousIndex]) {
+                const wasCorrect = answeredQuestions[previousIndex].correct;
+                const newStats = {
+                    correct: stats.correct - (wasCorrect ? 1 : 0),
+                    incorrect: stats.incorrect - (wasCorrect ? 0 : 1),
+                };
+                setStats(newStats);
+                saveSessionStats(
+                    topic,
+                    "practice",
+                    newStats.correct,
+                    newStats.incorrect,
+                );
+
+                setAnsweredQuestions((prev) => {
+                    const updated = { ...prev };
+                    delete updated[previousIndex];
+                    return updated;
+                });
+            }
+
+            setCurrentIndex(previousIndex);
+            setUserInput("");
+            setShowResult(false);
+        }
     };
 
     if (words.length === 0) {
@@ -262,6 +301,14 @@ export default function PracticeScreen({ navigation, route }) {
             </View>
 
             <View style={styles.inputContainer}>
+                {currentIndex > 0 && (
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={goToPreviousWord}
+                    >
+                        <Text style={styles.backButtonText}>← Назад</Text>
+                    </TouchableOpacity>
+                )}
                 <TextInput
                     style={[
                         styles.input,
@@ -402,6 +449,19 @@ const styles = StyleSheet.create({
         padding: 20,
         flex: 1,
     },
+    backButton: {
+        alignSelf: "flex-start",
+        backgroundColor: "#999",
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 20,
+        marginBottom: 15,
+    },
+    backButtonText: {
+        color: "white",
+        fontSize: 14,
+        fontWeight: "600",
+    },
     input: {
         backgroundColor: "white",
         borderWidth: 2,
@@ -440,7 +500,7 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         padding: 20,
-        paddingBottom: 40,
+        paddingBottom: 80,
     },
     checkButton: {
         backgroundColor: "#2196F3",

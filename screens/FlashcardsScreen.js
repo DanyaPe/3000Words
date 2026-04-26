@@ -128,6 +128,12 @@ export default function FlashcardsScreen({ navigation, route }) {
         setDirection((prev) => (prev === "en-ru" ? "ru-en" : "en-ru"));
     };
 
+    const goToPreviousCard = () => {
+        if (currentIndex > 0) {
+            setCurrentIndex(currentIndex - 1);
+        }
+    };
+
     if (words.length === 0) {
         return (
             <View style={styles.container}>
@@ -195,6 +201,15 @@ export default function FlashcardsScreen({ navigation, route }) {
             </View>
 
             <View style={styles.cardContainer}>
+                {currentIndex > 0 && (
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={goToPreviousCard}
+                    >
+                        <Text style={styles.backButtonText}>← Назад</Text>
+                    </TouchableOpacity>
+                )}
+
                 <SwipeableCard
                     key={`${currentIndex}-${direction}`}
                     word={words[currentIndex]}
@@ -284,6 +299,21 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         width: "100%",
+    },
+    backButton: {
+        position: "absolute",
+        top: 20,
+        left: 20,
+        backgroundColor: "#999",
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 20,
+        zIndex: 10,
+    },
+    backButtonText: {
+        color: "white",
+        fontSize: 14,
+        fontWeight: "600",
     },
     buttonsContainer: {
         flexDirection: "row",

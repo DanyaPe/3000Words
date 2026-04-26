@@ -20,6 +20,7 @@ export default function QuizScreen({ navigation, route }) {
     const [direction, setDirection] = useState("en-ru");
     const [stats, setStats] = useState({ correct: 0, incorrect: 0 });
     const [totalCount, setTotalCount] = useState(0);
+    const [answeredQuestions, setAnsweredQuestions] = useState({});
     const { topic } = route.params || {};
 
     useEffect(() => {
@@ -116,6 +117,11 @@ export default function QuizScreen({ navigation, route }) {
         await recordAttempt(wordId, isCorrect);
         await markWordAsViewed(wordId, topic, "quiz");
 
+        setAnsweredQuestions((prev) => ({
+            ...prev,
+            [currentIndex]: { correct: isCorrect },
+        }));
+
         const newStats = {
             correct: stats.correct + (isCorrect ? 1 : 0),
             incorrect: stats.incorrect + (isCorrect ? 0 : 1),
@@ -128,6 +134,8 @@ export default function QuizScreen({ navigation, route }) {
             newStats.correct,
             newStats.incorrect,
         );
+
+        setViewedCount((prev) => prev + 1);
     };
 
     const nextQuestion = () => {
@@ -181,6 +189,35 @@ export default function QuizScreen({ navigation, route }) {
 
     const toggleDirection = () => {
         setDirection((prev) => (prev === "en-ru" ? "ru-en" : "en-ru"));
+    };
+
+    const goToPreviousQuestion = () => {
+        if (currentIndex > 0) {
+            const previousIndex = currentIndex - 1;
+
+            if (answeredQuestions[previousIndex]) {
+                const wasCorrect = answeredQuestions[previousIndex].correct;
+                const newStats = {
+                    correct: stats.correct - (wasCorrect ? 1 : 0),
+                    incorrect: stats.incorrect - (wasCorrect ? 0 : 1),
+                };
+                setStats(newStats);
+                saveSessionStats(
+                    topic,
+                    "quiz",
+                    newStats.correct,
+                    newStats.incorrect,
+                );
+
+                setAnsweredQuestions((prev) => {
+                    const updated = { ...prev };
+                    delete updated[previousIndex];
+                    return updated;
+                });
+            }
+
+            setCurrentIndex(previousIndex);
+        }
     };
 
     if (words.length === 0) {
@@ -273,6 +310,14 @@ export default function QuizScreen({ navigation, route }) {
             </View>
 
             <View style={styles.optionsContainer}>
+                {currentIndex > 0 && (
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={goToPreviousQuestion}
+                    >
+                        <Text style={styles.backButtonText}>← Назад</Text>
+                    </TouchableOpacity>
+                )}
                 {options.map((option, index) => {
                     const isSelected = selectedOption === option;
                     const isCorrectOption = option === correctAnswer;
@@ -400,6 +445,19 @@ const styles = StyleSheet.create({
     optionsContainer: {
         padding: 20,
         flex: 1,
+    },
+    backButton: {
+        alignSelf: "flex-start",
+        backgroundColor: "#999",
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 20,
+        marginBottom: 15,
+    },
+    backButtonText: {
+        color: "white",
+        fontSize: 14,
+        fontWeight: "600",
     },
     option: {
         backgroundColor: "white",
